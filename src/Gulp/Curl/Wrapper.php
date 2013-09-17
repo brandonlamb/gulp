@@ -980,16 +980,13 @@ class Wrapper
 
     /**
      * CURLOPT_PROXYAUTH
-     * The HTTP authentication method(s) to use for the proxy connection.
-     * Use the same bitmasks as described in CURLOPT_HTTPAUTH. For proxy
-     * authentication, only CURLAUTH_BASIC and CURLAUTH_NTLM are currently
-     * supported.
-     * Added in cURL 7.10.7.
+     * The HTTP authentication method(s) to use for the proxy connection. Use the same bitmasks as described in
+     * CURLOPT_HTTPAUTH. For proxy authentication, only CURLAUTH_BASIC and CURLAUTH_NTLM are currently supported.
      * @param int $value
      * @return self
      *
      */
-    public function setProxyAuthr($value)
+    public function setProxyAuth($value)
     {
         return $this->setOption(CURLOPT_PROXYAUTH, $value);
     }
@@ -1212,7 +1209,7 @@ class Wrapper
      * @param string $value
      * @return self
      */
-    public function setCookieField($value)
+    public function setCookieFile($value)
     {
         return $this->setOption(CURLOPT_COOKIEFILE, $value);
     }
@@ -1509,7 +1506,7 @@ class Wrapper
      * @param string $value
      * @return self
      */
-    public function setURL($value)
+    public function setUrl($value)
     {
         return $this->setOption(CURLOPT_URL, $value);
     }

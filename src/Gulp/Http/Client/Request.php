@@ -1,6 +1,8 @@
 <?php
 
-namespace Gulp;
+namespace Gulp\Http\Client;
+
+use Gulp\Curl\Wrapper;
 
 class Request
 {
@@ -20,30 +22,22 @@ class Request
     /** @var \Gulp\Header */
     protected $header;
 
-    /** @var curl */
+    /** @var \Gulp\Curl\Wrapper */
     protected $handle;
-
-    /** @var string */
-    protected $url;
 
     /** @var array */
     protected $options = [];
 
     /**
      * Constructor
-     * @param string $url
      * @param \Gulp\Header $header
-     * @param \Gulp\Uri $uri
      */
-    public function __construct($url, Header $header)
+    public function __construct(Header $header)
     {
-        $this->url = $url;
-        $this->curl = new Curl\Wrapper($url);
-        $this->header = $header;
-
-#        $this->handle = curl_init();
-
-        $this->initOptions();
+        $this
+            ->setHeader($header)
+            ->setHandle(new Wrapper())
+            ->initOptions();
     }
 
     /**
@@ -51,7 +45,7 @@ class Request
      */
     public function __destruct()
     {
-        $this->curl->close();
+        $this->getHandle()->close();
     }
 
     /**
@@ -70,7 +64,7 @@ class Request
      */
     protected function initOptions()
     {
-        $this->curl->setOptions([
+        $this->getHandle()->setOptions([
             CURLOPT_RETURNTRANSFER  => true,
             CURLOPT_AUTOREFERER     => true,
             CURLOPT_FOLLOWLOCATION  => true,
@@ -79,7 +73,6 @@ class Request
             CURLOPT_HEADER          => true,
             CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-#            CURLOPT_USERAGENT       => 'Gulp HTTP/' . static::VERSION . ' (Curl)',
             CURLOPT_CONNECTTIMEOUT  => static::CONNECT_TIMEOUT,
             CURLOPT_TIMEOUT         => static::TIMEOUT,
             CURLOPT_ENCODING        => '',
@@ -103,62 +96,43 @@ class Request
     }
 
     /**
-     * Get or set curl handle
-     * @param curl $handle
+     * Get or set the header
+     * @param \Gulp\Header $header
      * @return self
      */
-    public function handle($handle = null)
+    public function setHeader(Header $header)
     {
-        null !== $handle && $this->handle = $handle;
-        return $this->handle;
+        $this->header = $header;
+        return $this;
     }
 
     /**
-     * Get or set the header
-     * @param \Gulp\Header $header
+     * Get the header
      * @return \Gulp\Header
      */
-    public function header(Header $header = null)
+    public function getHeader()
     {
-        null !== $header && $this->header = $header;
         return $this->header;
     }
 
     /**
      * Get or set the curl handle
-     * @param \Gulp\Curl $curl
-     * @return \Gulp\Curl
+     * @param \Gulp\Curl\Wrapper $handle
+     * @return self
      */
-    public function curl(\Gulp\Curl $curl = null)
+    public function setHandle(Wrapper $handle)
     {
-        null !== $curl && $this->curl = $curl;
-        return $this->curl;
+        $this->handle = $handle;
+        return $this;
     }
 
     /**
-     * Get or set the uri
-     * @param \Gulp\Uri $uri
-     * @return \Gulp\Uri
+     * Get the curl handle
+     * @return \Gulp\Curl\Wrapper
      */
-    public function uri(Uri $uri = null)
+    public function getHandle()
     {
-        null !== $uri && $this->baseUri = $uri;
-        return $this->baseUri;
-    }
-
-    public function setBaseUri($baseUri)
-    {
-        $this->baseUri = new Uri($baseUri);
-    }
-
-    public function getBaseUri()
-    {
-        return $this->baseUri->toString();
-    }
-
-    public function resolveUri($uri)
-    {
-        return $this->baseUri->resolve($uri);
+        return $this->handle;
     }
 
     /**
@@ -169,7 +143,7 @@ class Request
      */
     public function setOption($option, $value)
     {
-        $this->curl->setOption($option, $value);
+        $this->getHandle()->setOption($option, $value);
         return $this;
     }
 
@@ -180,7 +154,7 @@ class Request
      */
     public function setOptions(array $options)
     {
-        $this->curl->setOptions($options);
+        $this->getHandle()->setOptions($options);
         return $this;
     }
 
@@ -283,39 +257,37 @@ class Request
     public function setAuth($username, $password, $type = CURLAUTH_ANY)
     {
         // set the required options
-        $this->setOptions(array(
-            CURLOPT_HTTPAUTH => $type,
-            CURLOPT_USERPWD => "$username:$password",
-        ));
+        $this->getHandle()
+            ->setHttpAuth($type)
+            ->setUserPwd("$username:$password");
+
         return $this;
     }
 
     public function setProxy($host = null, $port = 8080, $username = null, $password = null)
     {
         if (null === $host) {
-            $this->option(array(
-                CURLOPT_HTTPPROXYTUNNEL =>  null,
-                CURLOPT_PROXY =>  null,
-                CURLOPT_PROXYPORT =>  null,
-            ));
+            $this->getHandle()
+                ->setHttpProxyTunnel(null)
+                ->setProxyAuth(null)
+                ->setProxy(null)
+                ->setProxyPort(null)
+                ->setProxyType(null);
             return $this;
         }
 
-        // set the required options
-        $this->option(array(
-            CURLOPT_HTTPPROXYTUNNEL =>  true,
-            CURLOPT_PROXY =>  $host,
-            CURLOPT_PROXYPORT =>  $port,
-        ));
+        $this->getHandle()
+            ->setHttpProxyTunnel(true)
+            ->setProxyAuth(CURLAUTH_BASIC)
+            ->setProxy($host)
+            ->setProxyPort($port)
+            ->setProxyType(CURLPROXY_HTTP);
 
         if (null !== $username) {
             $pair = $username;
             null !== $password && $pair .= ':' . $pass;
-            $this->setOption(CURLOPT_PROXYUSERPWD, $pair);
+            $this->getHandle()->setProxyUserPwd($pair);
         }
-
-        // if a username is also specified, set authentication values
-        null !== $username && $this->option(CURLOPT_PROXYUSERPWD, $username . ':' . $password);
 
         return $this;
     }
@@ -347,7 +319,7 @@ class Request
         }
     }
 
-    public function setCookies($path, $keep = false)
+    public function setCookies($path)
     {
         // file does not exist
         if (!is_writable($path)) {
@@ -361,10 +333,9 @@ class Request
         }
 
         // set these options
-        $this->setOptions(array(
-            CURLOPT_COOKIEJAR => $path,
-            CURLOPT_COOKIEFILE => $path,
-        ));
+        $this->getHandle()
+            ->setCookieFile($path)
+            ->setCookieJar($path);
 
         return $this;
     }

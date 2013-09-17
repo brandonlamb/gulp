@@ -3,6 +3,9 @@
 namespace Gulp;
 
 use Gulp\Common\Collection,
+	Gulp\Http\Uri,
+	Gulp\Http\Client\Request,
+	Gulp\Http\Client\Header,
 	Gulp\Curl\Version as CurlVersion;
 
 class Client
@@ -237,12 +240,12 @@ class Client
             }
         }
 
-        $request = new Request($url, new Header($headers));
-        $request
-        	->setOptions($options)
-        	->curl()->setUserAgent($this->userAgent);
+        $request = new Request(new Header($headers));
+        $request->getHandle()
+    		->setUserAgent($this->userAgent)
+			->setUrl($url);
+        $request->setOptions($options);
 
-d($request);
 d($method, $url, $headers, $body, $options);
 
         return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);

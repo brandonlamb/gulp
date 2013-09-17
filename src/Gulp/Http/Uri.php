@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp;
+namespace Gulp\Http;
 
 class Uri
 {
