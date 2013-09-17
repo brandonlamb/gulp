@@ -2,7 +2,7 @@
 
 namespace Gulp;
 
-class Curl
+class Wrapper
 {
     /** @var array */
     protected $http200Aliases = [];

@@ -64,6 +64,15 @@ class Client
 		return $this;
 	}
 
+    /**
+     * Get the base url for all created requests
+     * @return string
+     */
+	public function getBaseUrl()
+    {
+        return $this->baseUrl;
+    }
+
 	/**
 	 * Set the user agent for all created requests
 	 * @param string $userAgent
@@ -91,13 +100,20 @@ class Client
 
     /**
      * Set a default request option on the client that will be used as a default for each request
-     * @param string $keyOrPath request.options key (e.g. allow_redirects) or path to a nested key (e.g. headers/foo)
+     * @param string $bag request.options key (e.g. allow_redirects) or path to a nested key (e.g. headers/foo)
+     * @param string|array $key
      * @param mixed $value Value to set
      * @return $this
      */
-    public function setDefaultOption($keyOrPath, $value)
+    public function setDefaultOption($bag, $key, $value = null)
     {
-        $this->config->set(self::REQUEST_OPTIONS . $keyOrPath, $value);
+    	if (is_array($key)) {
+    		foreach ($key as $k => $v) {
+    			$this->config->set(static::REQUEST_OPTIONS . $bag, $k, $v);
+    		}
+    	} else {
+        	$this->config->set(static::REQUEST_OPTIONS . $bag, $key, $value);
+    	}
         return $this;
     }
 
@@ -106,9 +122,9 @@ class Client
      * @param string $keyOrPath request.options key (e.g. allow_redirects) or path to a nested key (e.g. headers/foo)
      * @return mixed|null
      */
-    public function getDefaultOption($keyOrPath)
+    public function getDefaultOption($bag, $key)
     {
-        return $this->config->get(self::REQUEST_OPTIONS . $keyOrPath);
+        return $this->config->get(static::REQUEST_OPTIONS . $bag, $key);
     }
 
     /**
@@ -206,35 +222,23 @@ class Client
      * @param string $body
      * @param array $options
      */
-	public function createRequest($method = 'GET', $uri = null, $headers = null, $body = null, array $options = array())
+	public function createRequest($method = 'GET', $uri = null, $headers = null, $body = null, array $options = [])
     {
-
-        if (!$uri) {
-            $url = $this->getBaseUrl();
-        } else {
-            if (!is_array($uri)) {
-                $templateVars = null;
-            } else {
-                list($uri, $templateVars) = $uri;
-            }
-            if (substr($uri, 0, 4) === 'http') {
-                // Use absolute URLs as-is
-                $url = $this->expandTemplate($uri, $templateVars);
-            } else {
-                $url = Url::factory($this->getBaseUrl())->combine($this->expandTemplate($uri, $templateVars));
-            }
-        }
+    	$url = $this->uri->resolve($uri)->build();
+		$defaultHeaders = $this->config->getBag(static::REQUEST_OPTIONS . 'headers');
 
         // If default headers are provided, then merge them under any explicitly provided headers for the request
-        if (count($this->defaultHeaders)) {
+        if (count($defaultHeaders)) {
             if (!$headers) {
-                $headers = $this->defaultHeaders->toArray();
+                $headers = $defaultHeaders;
             } elseif (is_array($headers)) {
-                $headers += $this->defaultHeaders->toArray();
+                $headers += $defaultHeaders;
             } elseif ($headers instanceof Collection) {
-                $headers = $headers->toArray() + $this->defaultHeaders->toArray();
+                $headers = $headers->getData() + $defaultHeaders;
             }
         }
+
+d($url, $headers);
 
         return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);
     }

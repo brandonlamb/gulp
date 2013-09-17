@@ -37,6 +37,7 @@ class Request
      */
     public function __construct($url = null, Header $header = null, Uri $uri = null)
     {
+        $this->curl = new Curl($url);
         $this->handle = curl_init();
         $this->header = null !== $header ? $header : new Header();
         $this->baseUri = null !== $uri ? $uri : new Uri($url);
