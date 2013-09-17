@@ -4,6 +4,7 @@ namespace Gulp;
 
 use Gulp\Common\Collection,
 	Gulp\Http\Uri,
+	Gulp\Http\RequestFactory,
 	Gulp\Http\Client\Request,
 	Gulp\Http\Client\Header,
 	Gulp\Curl\Version as CurlVersion;
@@ -12,6 +13,7 @@ class Client
 {
     const VERSION = '0.0.1';
 	const REQUEST_OPTIONS = 'request.options.';
+	const CURL_OPTIONS = 'curl.options';
 
 	/** @var string */
 	protected $baseUrl;
@@ -21,6 +23,9 @@ class Client
 
 	/** @var string */
 	protected $userAgent;
+
+	/** @var \Gulp\Http\RequestFactory */
+	protected $requestFactory;
 
 	/** @var Uri */
 	protected $uri;
@@ -34,6 +39,7 @@ class Client
 		$this->setConfig($config ?: new Collection());
         $this->setBaseUrl($baseUrl);
 		$this->setUserAgent('', true);
+#		$this->setRequestFactory(RequestFactory::getInstance());
 		$this->uri = new Uri($this->getBaseUrl());
 	}
 
@@ -73,6 +79,17 @@ class Client
 	public function getBaseUrl()
     {
         return $this->baseUrl;
+    }
+
+    /**
+     * Set the request factory
+     * @param \Gulp\Http\RequestFactory $factory
+     * @return self;
+     */
+	public function setRequestFactory(RequestFactory $factory)
+    {
+        $this->requestFactory = $factory;
+        return $this;
     }
 
 	/**
@@ -240,14 +257,45 @@ class Client
             }
         }
 
-        $request = new Request(new Header($headers));
-        $request->getHandle()
-    		->setUserAgent($this->userAgent)
-			->setUrl($url);
-        $request->setOptions($options);
-
+#		$request = $this->prepareRequest($this->requestFactory->create($method, $url, $headers, $body), $options);
+		$request = $this->prepareRequest(new Request(new Header($headers)), $options);
+d($request);
 d($method, $url, $headers, $body, $options);
 
         return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);
+    }
+
+    /**
+     * Prepare a request to be sent from the Client by adding client specific behaviors and properties to the request.
+     *
+     * @param RequestInterface $request Request to prepare for the client
+     * @param array            $options Options to apply to the request
+     *
+     * @return RequestInterface
+     */
+    protected function prepareRequest(Request $request, array $options = [])
+    {
+        $request->setClient($this);
+
+        if ($curl = $this->config->getBag(static::CURL_OPTIONS)) {
+            $request->setOptions($curl);
+        }
+
+        if ($this->userAgent && !$request->getHeader()->has('User-Agent')) {
+	        $request->getHandle()->setUserAgent($this->userAgent);
+            $request->getHeader()->set('User-Agent', $this->userAgent);
+        }
+
+        if ($defaults = $this->config->getBag(static::REQUEST_OPTIONS)) {
+	        $request->setOptions($defaults);
+#            $this->requestFactory->applyOptions($request, $defaults, RequestFactoryInterface::OPTIONS_AS_DEFAULTS);
+        }
+
+        if ($options) {
+	        $request->setOptions($options);
+#            $this->requestFactory->applyOptions($request, $options);
+        }
+
+        return $request;
     }
 }

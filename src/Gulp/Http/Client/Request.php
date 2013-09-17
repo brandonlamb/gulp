@@ -2,7 +2,8 @@
 
 namespace Gulp\Http\Client;
 
-use Gulp\Curl\Wrapper;
+use Gulp\Curl\Wrapper,
+    Gulp\Client;
 
 class Request
 {
@@ -27,6 +28,9 @@ class Request
 
     /** @var array */
     protected $options = [];
+
+    /** @var \Gulp\Client */
+    protected $client;
 
     /**
      * Constructor
@@ -93,6 +97,17 @@ class Request
         if (!empty($params) && is_array($params)) {
             $this->setOption(CURLOPT_POSTFIELDS, $multiPart ? $params : http_build_query($params));
         }
+    }
+
+    /**
+     * Set the client
+     * @param \Gulp\Client $client
+     * @return self
+     */
+    public function setClient(Client $client)
+    {
+        $this->client = $client;
+        return $this;
     }
 
     /**

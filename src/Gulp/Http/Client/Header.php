@@ -2,9 +2,16 @@
 
 namespace Gulp\Http\Client;
 
-class Header implements \Countable
+use Gulp\Traits\Structural\Collection\HasDataTrait,
+    Gulp\Traits\Structural\Collection\RegistryTrait,
+    Gulp\Traits\Structural\Collection\CountableTrait,
+    Gulp\Traits\Structural\Collection\AssociativeArrayAccessTrait;
+
+class Header implements \Countable, \ArrayAccess
 {
-    protected static $messages = array(
+    use HasDataTrait, RegistryTrait, CountableTrait, AssociativeArrayAccessTrait;
+
+    protected static $messages = [
         // Informational 1xx
         100 => 'Continue',
         101 => 'Switching Protocols',
@@ -56,9 +63,8 @@ class Header implements \Countable
         504 => 'Gateway Timeout',
         505 => 'HTTP Version Not Supported',
         509 => 'Bandwidth Limit Exceeded'
-    );
+    ];
 
-    private $fields = array();
     public $version = '1.0';
     public $statusCode = 0;
     public $statusMessage = '';
@@ -69,37 +75,12 @@ class Header implements \Countable
 
     public function __construct(array $headers)
     {
-        $this->fields = $headers;
+        $this->data = $headers;
     }
 
-    public function set($name, $value)
+    public function addMultiple($data)
     {
-        $this->fields[$name] = $value;
-    }
-
-    public function setMultiple($fields)
-    {
-        $this->fields = $fields;
-    }
-
-    public function addMultiple($fields)
-    {
-        $this->fields = array_combine($this->fields, $fields);
-    }
-
-    public function get($name)
-    {
-        return $this->fields[$name];
-    }
-
-    public function getAll()
-    {
-        return $this->fields;
-    }
-
-    public function remove($name)
-    {
-        unset($this->fields[$name]);
+        $this->data = array_combine($this->data, $data);
     }
 
     public function parse($content)
@@ -144,7 +125,7 @@ class Header implements \Countable
                 self::$messages[$this->statusCode];
         }
 
-        foreach ($this->fields as $field => $value) {
+        foreach ($this->data as $field => $value) {
             $lines[] = $field . ': ' . $value;
         }
 
@@ -153,10 +134,5 @@ class Header implements \Countable
         }
 
         return $lines;
-    }
-
-    public function count()
-    {
-        return count($this->fields);
     }
 }
