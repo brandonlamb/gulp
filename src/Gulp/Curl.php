@@ -793,7 +793,7 @@ class Curl
      * @return self
      *
      */
-    public function setConnectionTimeoutMs($value)
+    public function setConnectTimeoutMs($value)
     {
         return $this->setOption(CURLOPT_CONNECTTIMEOUT_MS, $value);
     }
@@ -1097,7 +1097,7 @@ class Curl
      * @param int $value
      * @return self
      */
-    public function setTimeOut($value)
+    public function setTimeout($value)
     {
         return $this->setOption(CURLOPT_TIMEOUT, $value);
     }
@@ -1113,7 +1113,7 @@ class Curl
      * @param int $value
      * @return self
      */
-    public function setTimeOutMs($value)
+    public function setTimeoutMs($value)
     {
         return $this->setOption(CURLOPT_TIMEOUT_MS, $value);
     }

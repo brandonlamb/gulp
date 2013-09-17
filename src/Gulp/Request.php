@@ -124,6 +124,17 @@ class Request
     }
 
     /**
+     * Get or set the curl handle
+     * @param \Gulp\Curl $curl
+     * @return \Gulp\Curl
+     */
+    public function curl(\Gulp\Curl $curl = null)
+    {
+        null !== $curl && $this->curl = $curl;
+        return $this->curl;
+    }
+
+    /**
      * Get or set the uri
      * @param \Gulp\Uri $uri
      * @return \Gulp\Uri
@@ -172,16 +183,6 @@ class Request
             $this->options[$option] = $value;
         }
         return $this;
-    }
-
-    public function setTimeout($timeout)
-    {
-        $this->setOption(CURLOPT_TIMEOUT, $timeout);
-    }
-
-    public function setConnectTimeout($timeout)
-    {
-        $this->setOption(CURLOPT_CONNECTTIMEOUT, $timeout);
     }
 
     public function get($uri = null, array $headers = array(), array $params = array())
