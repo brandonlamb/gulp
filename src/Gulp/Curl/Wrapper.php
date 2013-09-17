@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp;
+namespace Gulp\Curl;
 
 class Wrapper
 {
@@ -95,8 +95,10 @@ class Wrapper
      */
     public function close()
     {
-        curl_close($this->handle);
-        $this->handle = null;
+        if (is_resource($this->handle)) {
+            curl_close($this->handle);
+            $this->handle = null;
+        }
         return $this;
     }
 

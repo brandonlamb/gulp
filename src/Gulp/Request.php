@@ -20,11 +20,11 @@ class Request
     /** @var \Gulp\Header */
     protected $header;
 
-    /** @var \Gulp\Uri */
-    protected $baseUri;
-
     /** @var curl */
     protected $handle;
+
+    /** @var string */
+    protected $url;
 
     /** @var array */
     protected $options = [];
@@ -35,12 +35,13 @@ class Request
      * @param \Gulp\Header $header
      * @param \Gulp\Uri $uri
      */
-    public function __construct($url = null, Header $header = null, Uri $uri = null)
+    public function __construct($url, Header $header)
     {
-        $this->curl = new Curl($url);
-        $this->handle = curl_init();
-        $this->header = null !== $header ? $header : new Header();
-        $this->baseUri = null !== $uri ? $uri : new Uri($url);
+        $this->url = $url;
+        $this->curl = new Curl\Wrapper($url);
+        $this->header = $header;
+
+#        $this->handle = curl_init();
 
         $this->initOptions();
     }
@@ -50,7 +51,7 @@ class Request
      */
     public function __destruct()
     {
-        curl_close($this->handle);
+        $this->curl->close();
     }
 
     /**
@@ -69,7 +70,7 @@ class Request
      */
     protected function initOptions()
     {
-        $this->options = [
+        $this->curl->setOptions([
             CURLOPT_RETURNTRANSFER  => true,
             CURLOPT_AUTOREFERER     => true,
             CURLOPT_FOLLOWLOCATION  => true,
@@ -78,12 +79,11 @@ class Request
             CURLOPT_HEADER          => true,
             CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
             CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-            CURLOPT_USERAGENT       => 'Gulp HTTP/' . static::VERSION . ' (Curl)',
+#            CURLOPT_USERAGENT       => 'Gulp HTTP/' . static::VERSION . ' (Curl)',
             CURLOPT_CONNECTTIMEOUT  => static::CONNECT_TIMEOUT,
             CURLOPT_TIMEOUT         => static::TIMEOUT,
             CURLOPT_ENCODING        => '',
-        ];
-
+        ]);
         return $this;
     }
 
@@ -169,7 +169,7 @@ class Request
      */
     public function setOption($option, $value)
     {
-        $this->options[$option] = $value;
+        $this->curl->setOption($option, $value);
         return $this;
     }
 
@@ -180,9 +180,7 @@ class Request
      */
     public function setOptions(array $options)
     {
-        foreach ($options as $option => $value) {
-            $this->options[$option] = $value;
-        }
+        $this->curl->setOptions($options);
         return $this;
     }
 

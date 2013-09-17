@@ -67,6 +67,11 @@ class Header implements \Countable
     const BUILD_STATUS = 1;
     const BUILD_FIELDS = 2;
 
+    public function __construct(array $headers)
+    {
+        $this->fields = $headers;
+    }
+
     public function set($name, $value)
     {
         $this->fields[$name] = $value;

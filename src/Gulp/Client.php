@@ -31,7 +31,6 @@ class Client
 		$this->setConfig($config ?: new Collection());
         $this->setBaseUrl($baseUrl);
 		$this->setUserAgent('', true);
-
 		$this->uri = new Uri($this->getBaseUrl());
 	}
 
@@ -238,9 +237,14 @@ class Client
             }
         }
 
-d($url, $headers);
+        $request = new Request($url, new Header($headers));
+        $request
+        	->setOptions($options)
+        	->curl()->setUserAgent($this->userAgent);
+
+d($request);
+d($method, $url, $headers, $body, $options);
 
         return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);
     }
-
 }
