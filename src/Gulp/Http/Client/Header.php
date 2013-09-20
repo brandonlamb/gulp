@@ -73,7 +73,7 @@ class Header implements \Countable, \ArrayAccess
     const BUILD_STATUS = 1;
     const BUILD_FIELDS = 2;
 
-    public function __construct(array $headers)
+    public function __construct(array $headers = [])
     {
         $this->data = $headers;
     }
@@ -95,7 +95,7 @@ class Header implements \Countable, \ArrayAccess
             return false;
         }
 
-        $status = array();
+        $status = [];
         if (preg_match('/^HTTP\/(\d(?:\.\d)?)\s+(\d{3})\s+(.+)$/i', $content[0], $status)) {
             $this->status = array_shift($content);
             $this->version = $status[1];
@@ -118,7 +118,7 @@ class Header implements \Countable, \ArrayAccess
 
     public function build($flags = 0)
     {
-        $lines = array();
+        $lines = [];
         if (($flags & self::BUILD_STATUS) && !empty(self::$messages[$this->statusCode])) {
             $lines[] = 'HTTP/' . $this->version . ' ' .
                 $this->statusCode . ' ' .

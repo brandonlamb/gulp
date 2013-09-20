@@ -4,7 +4,7 @@ namespace Gulp;
 
 use Gulp\Common\Collection,
 	Gulp\Http\Uri,
-	Gulp\Http\RequestFactory,
+    Gulp\Http\Client\RequestFactory,
 	Gulp\Http\Client\Request,
 	Gulp\Http\Client\Header,
 	Gulp\Curl\Version as CurlVersion;
@@ -39,7 +39,7 @@ class Client
 		$this->setConfig($config ?: new Collection());
         $this->setBaseUrl($baseUrl);
 		$this->setUserAgent('', true);
-#		$this->setRequestFactory(RequestFactory::getInstance());
+		$this->setRequestFactory(new RequestFactory());
 		$this->uri = new Uri($this->getBaseUrl());
 	}
 
@@ -71,6 +71,15 @@ class Client
 		$this->baseUrl = (string) $url;
 		return $this;
 	}
+
+    /**
+     * Get the uri object
+     * @return \Gulp\Http\Uri
+     */
+    public function getUri()
+    {
+        return $this->uri;
+    }
 
     /**
      * Get the base url for all created requests
@@ -244,6 +253,7 @@ class Client
 	public function createRequest($method = 'GET', $uri = null, $headers = null, $body = null, array $options = [])
     {
     	$url = $this->uri->resolve($uri)->build();
+
 		$defaultHeaders = $this->config->getBag(static::REQUEST_OPTIONS . 'headers');
 
         // If default headers are provided, then merge them under any explicitly provided headers for the request
@@ -257,8 +267,10 @@ class Client
             }
         }
 
+        $request = $this->requestFactory->create($method, $url, $headers, $body);
 #		$request = $this->prepareRequest($this->requestFactory->create($method, $url, $headers, $body), $options);
-		$request = $this->prepareRequest(new Request(new Header($headers)), $options);
+#		$request = $this->prepareRequest(new Request(new Header($headers)), $options);
+
 d($request);
 d($method, $url, $headers, $body, $options);
 
@@ -293,6 +305,7 @@ d($method, $url, $headers, $body, $options);
 
         if ($options) {
 	        $request->setOptions($options);
+#            !empty($params) && $uri->extendQuery($params);
 #            $this->requestFactory->applyOptions($request, $options);
         }
 

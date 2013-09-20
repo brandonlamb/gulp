@@ -15,33 +15,72 @@ class Request
     const METHOD_HEAD       = 'HEAD';
     const METHOD_OPTIONS    = 'OPTIONS';
     const METHOD_TRACE      = 'TRACE';
+    const METHOD_PATCH      = 'PATCH';
     const METHOD_CONNECTION = 'CONNECTION';
     const CONNECT_TIMEOUT   = 30;
     const TIMEOUT           = 30;
     const MAX_REDIRECTS     = 20;
 
-    /** @var \Gulp\Header */
+    /** @var \Gulp\Http\Client\Header */
     protected $header;
 
     /** @var \Gulp\Curl\Wrapper */
     protected $handle;
 
-    /** @var array */
-    protected $options = [];
+    /** @var \Gulp\Http\Client\Response */
+    protected $response;
 
     /** @var \Gulp\Client */
     protected $client;
 
+    /** @var array */
+    protected $options = [];
+
+    /** @var array */
+    protected $postFields = [];
+
+    /** @var string */
+    protected $responseClass = '\\Gulp\\Http\\Client\\Response';
+
+    /** @var string */
+    protected $wrapperClass = '\\Gulp\\Curl\\Wrapper';
+
     /**
      * Constructor
-     * @param \Gulp\Header $header
+     * @param string $method
+     * @param string $url
+     * @param \Gulp\Http\Client\Header $header
+     * @param array $options
      */
-    public function __construct(Header $header)
+    public function __construct($method, $url, Header $header)
     {
         $this
             ->setHeader($header)
-            ->setHandle(new Wrapper())
-            ->initOptions();
+            ->setResponse(new $this->responseClass())
+            ->setHandle(new $this->wrapperClass());
+
+        $this->setOptions([
+            CURLOPT_CUSTOMREQUEST   => $method,
+            CURLOPT_URL             => $url,
+            CURLOPT_RETURNTRANSFER  => true,
+            CURLOPT_AUTOREFERER     => true,
+            CURLOPT_FOLLOWLOCATION  => true,
+            CURLOPT_FORBID_REUSE    => false,
+            CURLOPT_MAXREDIRS       => static::MAX_REDIRECTS,
+            CURLOPT_HEADER          => true,
+            CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+            CURLOPT_CONNECTTIMEOUT  => static::CONNECT_TIMEOUT,
+            CURLOPT_TIMEOUT         => static::TIMEOUT,
+            CURLOPT_ENCODING        => '',
+        ]);
+
+        if ($method === static::METHOD_GET || $method === static::METHOD_HEAD || $method === static::METHOD_DELETE) {
+            $this->setOptions([CURLOPT_HTTPGET => true, CURLOPT_POST => false]);
+            $method !== static::METHOD_GET && $this->setOption(CURLOPT_NOBODY, true);
+        } else {
+            $this->setOptions([CURLOPT_HTTPGET => false, CURLOPT_POST => true]);
+        }
     }
 
     /**
@@ -63,40 +102,23 @@ class Request
     }
 
     /**
-     * Initializes default options
+     * Add post fields
+     * @param array $params
      * @return self
      */
-    protected function initOptions()
+    public function addPostFields($params)
     {
-        $this->getHandle()->setOptions([
-            CURLOPT_RETURNTRANSFER  => true,
-            CURLOPT_AUTOREFERER     => true,
-            CURLOPT_FOLLOWLOCATION  => true,
-            CURLOPT_FORBID_REUSE    => false,
-            CURLOPT_MAXREDIRS       => static::MAX_REDIRECTS,
-            CURLOPT_HEADER          => true,
-            CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-            CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
-            CURLOPT_CONNECTTIMEOUT  => static::CONNECT_TIMEOUT,
-            CURLOPT_TIMEOUT         => static::TIMEOUT,
-            CURLOPT_ENCODING        => '',
-        ]);
-        return $this;
-    }
-
-    protected function initPostFields($params)
-    {
-        $multiPart = false;
-        foreach ($params as $param) {
-            if (is_string($param) && preg_match('/^@/', $param)) {
-                $multiPart = true;
-                break;
+        foreach ($params as $key => $value) {
+            if (is_string($key) && $value{0} === '@') {
+                $value = curl_file_create(substr($value, 1), null, $key);
             }
+            $this->postFields[$key] = $value;
         }
 
         if (!empty($params) && is_array($params)) {
             $this->setOption(CURLOPT_POSTFIELDS, $multiPart ? $params : http_build_query($params));
         }
+        return $this;
     }
 
     /**
@@ -108,6 +130,15 @@ class Request
     {
         $this->client = $client;
         return $this;
+    }
+
+    /**
+     * Get the client
+     * @return \Gulp\Client
+     */
+    public function getClient()
+    {
+        return $this->client;
     }
 
     /**
@@ -131,7 +162,18 @@ class Request
     }
 
     /**
-     * Get or set the curl handle
+     * Set the response
+     * @param \Gulp\Http\Client\Response $response
+     * @return self
+     */
+    public function setResponse(Response $response)
+    {
+        $this->response = $response;
+        return $this;
+    }
+
+    /**
+     * Set the curl handle
      * @param \Gulp\Curl\Wrapper $handle
      * @return self
      */
@@ -158,7 +200,7 @@ class Request
      */
     public function setOption($option, $value)
     {
-        $this->getHandle()->setOption($option, $value);
+        $this->options[$option] = $value;
         return $this;
     }
 
@@ -169,93 +211,9 @@ class Request
      */
     public function setOptions(array $options)
     {
-        $this->getHandle()->setOptions($options);
-        return $this;
-    }
-
-    public function get($uri = null, array $headers = array(), array $params = array())
-    {
-        $uri = $this->resolveUri($uri);
-        !empty($params) && $uri->extendQuery($params);
-        $this->headers->addMultiple($headers);
-
-        $this->setOptions(array(
-           CURLOPT_URL => $uri->build(),
-           CURLOPT_HTTPGET => true,
-           CURLOPT_CUSTOMREQUEST => static::METHOD_GET,
-        ));
-
-        return $this;
-    }
-
-    public function head($uri = null, $headers = array(), $params = array())
-    {
-        $uri = $this->resolveUri($uri);
-        !empty($params) && $uri->extendQuery($params);
-
-        $this->setOptions(array(
-            CURLOPT_URL => $uri->build(),
-            CURLOPT_HTTPGET => true,
-            CURLOPT_CUSTOMREQUEST => static::METHOD_HEAD,
-            CURLOPT_NOBODY =>  true,
-        ));
-
-        return $this;
-    }
-
-    public function delete($uri = null, $headers = array(), $params = array())
-    {
-        $uri = $this->resolveUri($uri);
-        !empty($params) && $uri->extendQuery($params);
-
-        $this->setOptions(array(
-            CURLOPT_URL => $uri->build(),
-            CURLOPT_HTTPGET => true,
-            CURLOPT_CUSTOMREQUEST => static::METHOD_DELETE,
-            CURLOPT_NOBODY =>  true,
-        ));
-
-        return $this;
-    }
-
-    public function post($uri = null, $headers = array(), $params = array())
-    {
-        $this->header->set('Content-Type', 'application/x-www-form-urlencoded');
-
-        $this->setOptions(array(
-            CURLOPT_URL => $this->resolveUri($uri),
-            CURLOPT_POST => true,
-            CURLOPT_CUSTOMREQUEST => static::METHOD_POST,
-        ));
-
-        $this->initPostFields($params);
-
-        return $this;
-    }
-
-    public function put($uri = null, $headers = array(), $params = array())
-    {
-        $this->setOptions(array(
-            CURLOPT_URL => $this->resolveUri($uri),
-            CURLOPT_POST => true,
-            CURLOPT_CUSTOMREQUEST => static::METHOD_PUT,
-        ));
-
-        $this->initPostFields($params);
-
-        return $this;
-    }
-
-    public function options($uri = null, $headers = array(), $params = array())
-    {
-        $this->setOptions(array(
-            CURLOPT_URL => $this->resolveUri($uri),
-            CURLOPT_POST => true,
-            CURLOPT_CUSTOMREQUEST => static::METHOD_OPTIONS,
-        ));
-
-        $this->initPostFields($params);
-
+        foreach ($options as $key => $value) {
+            $this->options[$key] = $value;
+        }
         return $this;
     }
 
@@ -310,10 +268,10 @@ class Request
     public function setSsl($verifyPeer = false, $verifyHost = 2, $caFile = null, $path = null)
     {
         // set default options
-        $this->setOptions(array(
+        $this->setOptions([
             CURLOPT_SSL_VERIFYPEER => $verifyPeer,
             CURLOPT_SSL_VERIFYHOST => $verifyPost,
-        ));
+        ]);
 
         // if a path to a file holding one or more certificates to verify the peer with was given
         if (null !== $file) {
@@ -355,22 +313,35 @@ class Request
         return $this;
     }
 
+    /**
+     * Excecute the curl call and return the response
+     * @return \Gulp\Http\Client\Response
+     */
     public function send()
     {
-        $header = count($this->header) > 0 ? $this->header->build() : [];
+        $header = count($this->getHeader()) > 0 ? $this->getHeader()->build() : [];
         $header[] = 'Expect:';
         $this->setOption(CURLOPT_HTTPHEADER, $header);
 
+        // Set the options all at once
         curl_setopt_array($this->handle, $this->options);
 
-        $content = curl_exec($this->handle);
+        // Excecute the curl call and assign the response to the response body
+        $body = curl_exec($this->handle);
+
+        // Check if any errors occurred
         if ($errno = curl_errno($this->handle)) {
             throw new Exception(curl_error($this->handle), $errno);
         }
+
+        // Get the header size so we know where the body begins in the response
         $headerSize = curl_getinfo($this->handle, CURLINFO_HEADER_SIZE);
 
-        $response = new Response();
-        $response->parse($content, $headerSize);
-        return $response;
+        // Parse out headers from the body
+        $this->response
+            ->setHeaders(substr($body, 0, $headerSize))
+            ->setBody(substr($body, $headerSize));
+
+        return $this->response;
     }
 }
