@@ -39,25 +39,21 @@ class Request
     /** @var array */
     protected $postFields = [];
 
-    /** @var string */
-    protected $responseClass = '\\Gulp\\Http\\Client\\Response';
-
-    /** @var string */
-    protected $wrapperClass = '\\Gulp\\Curl\\Wrapper';
-
     /**
      * Constructor
      * @param string $method
      * @param string $url
+     * @param \Gulp\Curl\Wrapper $handle
      * @param \Gulp\Http\Client\Header $header
+     * @param \Gulp\Http\Client\Response $response
      * @param array $options
      */
-    public function __construct($method, $url, Header $header)
+    public function __construct($method, $url, Wrapper $handle, Header $header, Response $response)
     {
         $this
             ->setHeader($header)
-            ->setResponse(new $this->responseClass())
-            ->setHandle(new $this->wrapperClass());
+            ->setResponse($response)
+            ->setHandle($handle);
 
         $this->setOptions([
             CURLOPT_CUSTOMREQUEST   => $method,
@@ -84,7 +80,7 @@ class Request
     }
 
     /**
-     * Destructor
+     * Close the curl handle on object destruct
      */
     public function __destruct()
     {
@@ -97,7 +93,7 @@ class Request
     public function __clone()
     {
         $request = new static;
-        $request->handle(curl_copy_handle($this->handle));
+        $request->setHandle(curl_copy_handle($this->handle));
         return $request;
     }
 
@@ -115,9 +111,6 @@ class Request
             $this->postFields[$key] = $value;
         }
 
-        if (!empty($params) && is_array($params)) {
-            $this->setOption(CURLOPT_POSTFIELDS, $multiPart ? $params : http_build_query($params));
-        }
         return $this;
     }
 
@@ -170,6 +163,15 @@ class Request
     {
         $this->response = $response;
         return $this;
+    }
+
+   /**
+     * Get the response
+     * @return \Gulp\Http\Client\Response
+     */
+    public function getResponse()
+    {
+        return $this->response;
     }
 
     /**
@@ -324,7 +326,12 @@ class Request
         $this->setOption(CURLOPT_HTTPHEADER, $header);
 
         // Set the options all at once
-        curl_setopt_array($this->handle, $this->options);
+        $this->getHandle()->setOptions($this->options);
+
+        // If there are post or file uploads, add to post fields
+        if (!empty($this->postFields) && is_array($this->postFields)) {
+            $this->getHandle()->setOption(CURLOPT_POSTFIELDS, $this->postFields);
+        }
 
         // Excecute the curl call and assign the response to the response body
         $body = curl_exec($this->handle);

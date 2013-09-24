@@ -7,17 +7,25 @@ class RequestFactory
 	/** @var string Class to instantiate for requests */
 	protected $requestClass = '\\Gulp\\Http\\Client\\Request';
 
+    /** @var string Class to instantiate for responses */
+    protected $responseClass = '\\Gulp\\Http\\Client\\Response';
+
 	/** @var string Class to instantiate for headers */
 	protected $headerClass = '\\Gulp\\Http\\Client\\Header';
+
+    /** @var string Class to instantiate for curl wrapper */
+    protected $handleClass = '\\Gulp\\Curl\\Wrapper';
 
     public function create($method, $url, $headers = null, $body = null, array $options = [])
     {
         $method = strtoupper($method);
         $headers = new $this->headerClass(is_array($headers) ? $headers : [$headers]);
+        $response = new $this->responseClass();
+        $handle = new $this->handleClass();
 
         if ($method == 'GET' || $method == 'HEAD' || $method == 'TRACE' || $method == 'OPTIONS') {
             // Handle non-entity-enclosing request methods
-            $request = new $this->requestClass($method, $url, $headers);
+            $request = new $this->requestClass($method, $url, $headers, $response);
             if ($body) {
                 // The body is where the response body will be stored
                 $type = gettype($body);
@@ -27,7 +35,7 @@ class RequestFactory
             }
         } else {
             // Create an entity enclosing request by default
-            $request = new $this->requestClass($method, $url, $headers);
+            $request = new $this->requestClass($method, $url, $headers, $response);
 #d($method, $url, $headers, $body, $options);
 
             if ($body) {
