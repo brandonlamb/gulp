@@ -30,6 +30,9 @@ class Client
 	/** @var Uri */
 	protected $uri;
 
+    /** @var string */
+    protected $uriClass = '\\Gulp\\Http\\Uri';
+
 	/**
 	 * @param string $baseUrl
 	 * @param array|Collection
@@ -40,7 +43,7 @@ class Client
         $this->setBaseUrl($baseUrl);
 		$this->setUserAgent('', true);
 		$this->setRequestFactory(new RequestFactory());
-		$this->uri = new Uri($this->getBaseUrl());
+		$this->uri = new $this->uriClass($this->getBaseUrl());
 	}
 
 	/**
@@ -252,7 +255,7 @@ class Client
      */
 	public function createRequest($method = 'GET', $uri = null, $headers = null, $body = null, array $options = [])
     {
-    	$url = $this->uri->resolve($uri)->build();
+#    	$url = $this->uri->resolve($uri)->build();
 
 		$defaultHeaders = $this->config->getBag(static::REQUEST_OPTIONS . 'headers');
 
@@ -267,14 +270,11 @@ class Client
             }
         }
 
-        $request = $this->requestFactory->create($method, $url, $headers, $body);
-#		$request = $this->prepareRequest($this->requestFactory->create($method, $url, $headers, $body), $options);
-#		$request = $this->prepareRequest(new Request(new Header($headers)), $options);
+        // rf->create(), 5th param is optional default curl options
+#        $request = $this->requestFactory->create($method, $url, $headers, $body);
+		$request = $this->prepareRequest($this->requestFactory->create($method, $uri, $headers, $body), $options);
 
-#d($request);
-#d($method, $url, $headers, $body, $options);
-
-        return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);
+        return $request;
     }
 
     /**
@@ -287,7 +287,7 @@ class Client
      */
     protected function prepareRequest(Request $request, array $options = [])
     {
-#        $request->setClient($this);
+        $request->setResource($this);
 
         if ($curl = $this->config->getBag(static::CURL_OPTIONS)) {
             $request->setOptions($curl);
@@ -304,9 +304,7 @@ class Client
         }
 
         if ($options) {
-	        $request->setOptions($options);
-#            !empty($params) && $uri->extendQuery($params);
-#            $this->requestFactory->applyOptions($request, $options);
+            $this->requestFactory->applyOptions($request, $options);
         }
 
         return $request;

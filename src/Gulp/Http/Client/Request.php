@@ -4,6 +4,7 @@ namespace Gulp\Http\Client;
 
 use Gulp\Curl\Wrapper,
     Gulp\Client,
+    Gulp\Http\Uri,
     Gulp\Exception;
 
 class Request
@@ -21,6 +22,9 @@ class Request
     const CONNECT_TIMEOUT   = 30;
     const TIMEOUT           = 30;
     const MAX_REDIRECTS     = 20;
+
+    /** @var string */
+    protected $method;
 
     /** @var \Gulp\Http\Client\Header */
     protected $header;
@@ -44,18 +48,22 @@ class Request
      * Constructor
      * @param string $method
      * @param string $url
+     * @param \Gulp\Http\Uri $uri
      * @param \Gulp\Curl\Wrapper $handle
      * @param \Gulp\Http\Client\Header $header
      * @param \Gulp\Http\Client\Response $response
      * @param array $options
      * @todo The default options should probably get pushed out of here and up the stack
      */
-    public function __construct($method, $url, Wrapper $handle, Header $header, Response $response)
+    public function __construct($method, Uri $uri, Wrapper $handle, Header $header, Response $response)
     {
+        $this->method = strtoupper($method);
+
         $this
+            ->setResource($uri)
+            ->setResource($handle)
             ->setResource($header)
-            ->setResource($response)
-            ->setResource($handle);
+            ->setResource($response);
 
         $this->setOptions([
             CURLOPT_CUSTOMREQUEST   => $method,
@@ -108,15 +116,28 @@ class Request
     {
         if ($resource instanceof Wrapper) {
             $this->handle = $resource;
+        } elseif ($resource instanceof Uri) {
+            $this->uri = $resource;
         } elseif ($resource instanceof Header) {
             $this->header = $resource;
         } elseif ($resource instanceof Response) {
             $this->response = $resource;
+        } elseif ($resource instanceof Client) {
+            $this->client = $resource;
         } else {
             throw new \InvalidArgumentException('Unknown resource');
         }
 
         return $this;
+    }
+
+    /**
+     * Get the method
+     * @return string
+     */
+    public function method()
+    {
+        return (string) $this->method;
     }
 
     /**
@@ -126,6 +147,15 @@ class Request
     public function header()
     {
         return $this->header;
+    }
+
+    /**
+     * Get the curl handle
+     * @return \Gulp\Curl\Wrapper
+     */
+    public function handle()
+    {
+        return $this->handle;
     }
 
    /**
@@ -138,12 +168,12 @@ class Request
     }
 
     /**
-     * Get the curl handle
-     * @return \Gulp\Curl\Wrapper
+     * Get the client
+     * @return \Gulp\Http\Client
      */
-    public function handle()
+    public function client()
     {
-        return $this->handle;
+        return $this->client;
     }
 
     /**
