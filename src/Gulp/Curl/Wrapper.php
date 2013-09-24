@@ -2,6 +2,8 @@
 
 namespace Gulp\Curl;
 
+use Gulp\Exception;
+
 class Wrapper
 {
     /** @var array */
@@ -47,6 +49,7 @@ class Wrapper
     public function __get($name)
     {
         switch ($name) {
+            case 'errorNo':
             case 'errNo':
                 return curl_errno($this->handle);
                 break;
@@ -336,6 +339,7 @@ class Wrapper
      */
     public function setOptions(array $options)
     {
+print_r($options);
         curl_setopt_array($this->handle, $options);
         return $this;
     }

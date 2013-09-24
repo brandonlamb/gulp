@@ -3,9 +3,9 @@ PROTOTYPE
 
 use Gulp\Request as Client;
 
-$request = new Client('http://api.example.com/v1');
+$client = new Client('http://api.example.com/v1');
 
-$request
+$request = $client
 	->get('upload', ['User-Agent' => 'Gulp 1.0'])
 	->header()->set('Accept-Type', 'application/json')
 	;

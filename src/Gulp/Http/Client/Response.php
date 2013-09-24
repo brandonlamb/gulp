@@ -13,15 +13,12 @@ class Response
     /** @var int */
     protected $headerSize = 0;
 
-    /** @var string */
-    protected $headerClass = '\\Gulp\\Http\\Client\\Header';
-
     /**
      * @param \Gulp\Http\Client\Header $header
      */
-    public function __construct(Header $header = null)
+    public function __construct(Header $header)
     {
-        !$header instanceof Header && $header = new $this->headerClass();
+        $this->header = $header;
     }
 
     /**
@@ -31,7 +28,7 @@ class Response
      */
     public function setHeaders($headers)
     {
-        $this->header->parse($headers);
+        $this->getHeader()->parse($headers);
         return $this;
     }
 

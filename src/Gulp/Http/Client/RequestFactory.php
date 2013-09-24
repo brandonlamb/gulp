@@ -19,13 +19,13 @@ class RequestFactory
     public function create($method, $url, $headers = null, $body = null, array $options = [])
     {
         $method = strtoupper($method);
-        $headers = new $this->headerClass(is_array($headers) ? $headers : [$headers]);
-        $response = new $this->responseClass();
         $handle = new $this->handleClass();
+        $headers = new $this->headerClass(is_array($headers) ? $headers : [$headers]);
+        $response = new $this->responseClass(new $this->headerClass());
 
         if ($method == 'GET' || $method == 'HEAD' || $method == 'TRACE' || $method == 'OPTIONS') {
             // Handle non-entity-enclosing request methods
-            $request = new $this->requestClass($method, $url, $headers, $response);
+            $request = new $this->requestClass($method, $url, $handle, $headers, $response);
             if ($body) {
                 // The body is where the response body will be stored
                 $type = gettype($body);
@@ -35,13 +35,11 @@ class RequestFactory
             }
         } else {
             // Create an entity enclosing request by default
-            $request = new $this->requestClass($method, $url, $headers, $response);
-#d($method, $url, $headers, $body, $options);
+            $request = new $this->requestClass($method, $url, $handle, $headers, $response);
 
             if ($body) {
-				$request->getHeader()->set('Content-Type', 'application/x-www-form-urlencoded');
+				$request->header()->set('Content-Type', 'application/x-www-form-urlencoded');
 				$request->addPostFields($body);
-d($request);
 
                 // Add POST fields and files to an entity enclosing request if an array is used
                 if (is_array($body)) {
@@ -56,8 +54,8 @@ d($request);
                     $request->addPostFields($body);
                 } else {
                     // Add a raw entity body body to the request
-                    $request->setBody($body, (string) $request->getHeader('Content-Type'));
-                    if ((string) $request->getHeader('Transfer-Encoding') == 'chunked') {
+                    $request->setBody($body, (string) $request->header()->get('Content-Type'));
+                    if ((string) $request->header()->get('Transfer-Encoding') == 'chunked') {
                         $request->removeHeader('Content-Length');
                     }
                 }

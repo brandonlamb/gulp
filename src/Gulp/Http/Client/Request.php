@@ -3,7 +3,8 @@
 namespace Gulp\Http\Client;
 
 use Gulp\Curl\Wrapper,
-    Gulp\Client;
+    Gulp\Client,
+    Gulp\Exception;
 
 class Request
 {
@@ -47,13 +48,14 @@ class Request
      * @param \Gulp\Http\Client\Header $header
      * @param \Gulp\Http\Client\Response $response
      * @param array $options
+     * @todo The default options should probably get pushed out of here and up the stack
      */
     public function __construct($method, $url, Wrapper $handle, Header $header, Response $response)
     {
         $this
-            ->setHeader($header)
-            ->setResponse($response)
-            ->setHandle($handle);
+            ->setResource($header)
+            ->setResource($response)
+            ->setResource($handle);
 
         $this->setOptions([
             CURLOPT_CUSTOMREQUEST   => $method,
@@ -84,7 +86,7 @@ class Request
      */
     public function __destruct()
     {
-        $this->getHandle()->close();
+        $this->handle()->close();
     }
 
     /**
@@ -98,50 +100,22 @@ class Request
     }
 
     /**
-     * Add post fields
-     * @param array $params
+     * Resource injection
+     * @param Wrapper|Header|Response $resource
      * @return self
      */
-    public function addPostFields($params)
+    public function setResource($resource)
     {
-        foreach ($params as $key => $value) {
-            if (is_string($key) && $value{0} === '@') {
-                $value = curl_file_create(substr($value, 1), null, $key);
-            }
-            $this->postFields[$key] = $value;
+        if ($resource instanceof Wrapper) {
+            $this->handle = $resource;
+        } elseif ($resource instanceof Header) {
+            $this->header = $resource;
+        } elseif ($resource instanceof Response) {
+            $this->response = $resource;
+        } else {
+            throw new \InvalidArgumentException('Unknown resource');
         }
 
-        return $this;
-    }
-
-    /**
-     * Set the client
-     * @param \Gulp\Client $client
-     * @return self
-     */
-    public function setClient(Client $client)
-    {
-        $this->client = $client;
-        return $this;
-    }
-
-    /**
-     * Get the client
-     * @return \Gulp\Client
-     */
-    public function getClient()
-    {
-        return $this->client;
-    }
-
-    /**
-     * Get or set the header
-     * @param \Gulp\Header $header
-     * @return self
-     */
-    public function setHeader(Header $header)
-    {
-        $this->header = $header;
         return $this;
     }
 
@@ -149,47 +123,25 @@ class Request
      * Get the header
      * @return \Gulp\Header
      */
-    public function getHeader()
+    public function header()
     {
         return $this->header;
-    }
-
-    /**
-     * Set the response
-     * @param \Gulp\Http\Client\Response $response
-     * @return self
-     */
-    public function setResponse(Response $response)
-    {
-        $this->response = $response;
-        return $this;
     }
 
    /**
      * Get the response
      * @return \Gulp\Http\Client\Response
      */
-    public function getResponse()
+    public function response()
     {
         return $this->response;
-    }
-
-    /**
-     * Set the curl handle
-     * @param \Gulp\Curl\Wrapper $handle
-     * @return self
-     */
-    public function setHandle(Wrapper $handle)
-    {
-        $this->handle = $handle;
-        return $this;
     }
 
     /**
      * Get the curl handle
      * @return \Gulp\Curl\Wrapper
      */
-    public function getHandle()
+    public function handle()
     {
         return $this->handle;
     }
@@ -220,6 +172,58 @@ class Request
     }
 
     /**
+     * Set a header value
+     * @param string $key
+     * @param mixed $value
+     * @return self
+     */
+    public function setHeader($key, $value)
+    {
+        $this->header()->set($key, $value);
+        return $this;
+    }
+
+    /**
+     * Set an array of headers
+     * @param array $headers
+     * @return self
+     */
+    public function setHeaders(array $headers)
+    {
+        $this->header()->addMultiple($headers);
+        return $this;
+    }
+
+    /**
+     * Add post fields
+     * @param array $params
+     * @return self
+     */
+    public function addPostFields($params)
+    {
+        foreach ($params as $key => $value) {
+            if (is_string($key) && is_string($value) && $value{0} === '@') {
+                $this->addPostFile($key, $value);
+                continue;
+            }
+            $this->postFields[$key] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Add post file upload
+     * @param string $key
+     * @param string $value
+     * @return self
+     */
+    public function addPostFile($key, $value)
+    {
+        return $this->addPostFields([$key => curl_file_create(substr($value, 1), null, $key)]);
+    }
+
+    /**
      * Use this method to make requests to pages that requires prior HTTP authentication.
      * @param string $username User name to be used for authentication.
      * @param string $password Password to be used for authentication.
@@ -232,7 +236,7 @@ class Request
     public function setAuth($username, $password, $type = CURLAUTH_ANY)
     {
         // set the required options
-        $this->getHandle()
+        $this->handle()
             ->setHttpAuth($type)
             ->setUserPwd("$username:$password");
 
@@ -242,7 +246,7 @@ class Request
     public function setProxy($host = null, $port = 8080, $username = null, $password = null)
     {
         if (null === $host) {
-            $this->getHandle()
+            $this->handle()
                 ->setHttpProxyTunnel(null)
                 ->setProxyAuth(null)
                 ->setProxy(null)
@@ -251,7 +255,7 @@ class Request
             return $this;
         }
 
-        $this->getHandle()
+        $this->handle()
             ->setHttpProxyTunnel(true)
             ->setProxyAuth(CURLAUTH_BASIC)
             ->setProxy($host)
@@ -261,7 +265,7 @@ class Request
         if (null !== $username) {
             $pair = $username;
             null !== $password && $pair .= ':' . $pass;
-            $this->getHandle()->setProxyUserPwd($pair);
+            $this->handle()->setProxyUserPwd($pair);
         }
 
         return $this;
@@ -308,10 +312,22 @@ class Request
         }
 
         // set these options
-        $this->getHandle()
+        $this->handle()
             ->setCookieFile($path)
             ->setCookieJar($path);
 
+        return $this;
+    }
+
+    /**
+     * Set the raw post body
+     * @param mixed $body
+     * @return self
+     */
+    public function setBody($body)
+    {
+        $this->postFields = [];
+        $this->handle()->setOption(CURLOPT_POSTFIELDS, $body);
         return $this;
     }
 
@@ -321,31 +337,31 @@ class Request
      */
     public function send()
     {
-        $header = count($this->getHeader()) > 0 ? $this->getHeader()->build() : [];
-        $header[] = 'Expect:';
-        $this->setOption(CURLOPT_HTTPHEADER, $header);
+        $headers = count($this->header()) > 0 ? $this->header()->build() : [];
+        $headers[] = 'Expect:';
+        $this->setOption(CURLOPT_HTTPHEADER, $headers);
 
         // Set the options all at once
-        $this->getHandle()->setOptions($this->options);
+        $this->handle()->setOptions($this->options);
 
         // If there are post or file uploads, add to post fields
         if (!empty($this->postFields) && is_array($this->postFields)) {
-            $this->getHandle()->setOption(CURLOPT_POSTFIELDS, $this->postFields);
+            $this->handle()->setOption(CURLOPT_POSTFIELDS, $this->postFields);
         }
 
         // Excecute the curl call and assign the response to the response body
-        $body = curl_exec($this->handle);
+        $body = $this->handle()->execute();
 
         // Check if any errors occurred
-        if ($errno = curl_errno($this->handle)) {
-            throw new Exception(curl_error($this->handle), $errno);
+        if ($errno = $this->handle()->errorNo) {
+            throw new Exception($this->handle()->error, $errno);
         }
 
         // Get the header size so we know where the body begins in the response
-        $headerSize = curl_getinfo($this->handle, CURLINFO_HEADER_SIZE);
+        $headerSize = $this->handle()->getInfo(CURLINFO_HEADER_SIZE);
 
         // Parse out headers from the body
-        $this->response
+        $this->response()
             ->setHeaders(substr($body, 0, $headerSize))
             ->setBody(substr($body, $headerSize));
 

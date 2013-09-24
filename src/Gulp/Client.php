@@ -271,8 +271,8 @@ class Client
 #		$request = $this->prepareRequest($this->requestFactory->create($method, $url, $headers, $body), $options);
 #		$request = $this->prepareRequest(new Request(new Header($headers)), $options);
 
-d($request);
-d($method, $url, $headers, $body, $options);
+#d($request);
+#d($method, $url, $headers, $body, $options);
 
         return $this->prepareRequest($this->requestFactory->create($method, (string) $url, $headers, $body), $options);
     }
@@ -287,15 +287,15 @@ d($method, $url, $headers, $body, $options);
      */
     protected function prepareRequest(Request $request, array $options = [])
     {
-        $request->setClient($this);
+#        $request->setClient($this);
 
         if ($curl = $this->config->getBag(static::CURL_OPTIONS)) {
             $request->setOptions($curl);
         }
 
-        if ($this->userAgent && !$request->getHeader()->has('User-Agent')) {
-	        $request->getHandle()->setUserAgent($this->userAgent);
-            $request->getHeader()->set('User-Agent', $this->userAgent);
+        if ($this->userAgent && !$request->header()->has('User-Agent')) {
+	        $request->handle()->setUserAgent($this->userAgent);
+            $request->header()->set('User-Agent', $this->userAgent);
         }
 
         if ($defaults = $this->config->getBag(static::REQUEST_OPTIONS)) {
