@@ -48,19 +48,17 @@ class Request
      * Constructor
      * @param string $method
      * @param string $url
-     * @param \Gulp\Http\Uri $uri
      * @param \Gulp\Curl\Wrapper $handle
      * @param \Gulp\Http\Client\Header $header
      * @param \Gulp\Http\Client\Response $response
      * @param array $options
      * @todo The default options should probably get pushed out of here and up the stack
      */
-    public function __construct($method, Uri $uri, Wrapper $handle, Header $header, Response $response)
+    public function __construct($method, $url, Wrapper $handle, Header $header, Response $response)
     {
         $this->method = strtoupper($method);
 
         $this
-            ->setResource($uri)
             ->setResource($handle)
             ->setResource($header)
             ->setResource($response);
@@ -116,8 +114,6 @@ class Request
     {
         if ($resource instanceof Wrapper) {
             $this->handle = $resource;
-        } elseif ($resource instanceof Uri) {
-            $this->uri = $resource;
         } elseif ($resource instanceof Header) {
             $this->header = $resource;
         } elseif ($resource instanceof Response) {

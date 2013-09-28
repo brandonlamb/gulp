@@ -30,9 +30,6 @@ class Client
 	/** @var Uri */
 	protected $uri;
 
-    /** @var string */
-    protected $uriClass = '\\Gulp\\Http\\Uri';
-
 	/**
 	 * @param string $baseUrl
 	 * @param array|Collection
@@ -43,7 +40,7 @@ class Client
         $this->setBaseUrl($baseUrl);
 		$this->setUserAgent('', true);
 		$this->setRequestFactory(new RequestFactory());
-		$this->uri = new $this->uriClass($this->getBaseUrl());
+		$this->uri = new Uri($this->getBaseUrl());
 	}
 
 	/**
@@ -255,8 +252,7 @@ class Client
      */
 	public function createRequest($method = 'GET', $uri = null, $headers = null, $body = null, array $options = [])
     {
-#    	$url = $this->uri->resolve($uri)->build();
-
+    	$url = $this->uri->resolve($uri)->build();
 		$defaultHeaders = $this->config->getBag(static::REQUEST_OPTIONS . 'headers');
 
         // If default headers are provided, then merge them under any explicitly provided headers for the request
@@ -272,7 +268,7 @@ class Client
 
         // rf->create(), 5th param is optional default curl options
 #        $request = $this->requestFactory->create($method, $url, $headers, $body);
-		$request = $this->prepareRequest($this->requestFactory->create($method, $uri, $headers, $body), $options);
+		$request = $this->prepareRequest($this->requestFactory->create($method, $url, $headers, $body), $options);
 
         return $request;
     }
