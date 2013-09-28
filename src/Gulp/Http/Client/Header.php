@@ -11,6 +11,14 @@ class Header implements \Countable, \ArrayAccess
 {
     use HasDataTrait, RegistryTrait, CountableTrait, AssociativeArrayAccessTrait;
 
+    const BUILD_STATUS = 1;
+    const BUILD_FIELDS = 2;
+
+    public $version = '1.0';
+    public $statusCode = 0;
+    public $statusMessage = '';
+    public $status = '';
+
     protected static $messages = [
         // Informational 1xx
         100 => 'Continue',
@@ -64,14 +72,6 @@ class Header implements \Countable, \ArrayAccess
         505 => 'HTTP Version Not Supported',
         509 => 'Bandwidth Limit Exceeded'
     ];
-
-    public $version = '1.0';
-    public $statusCode = 0;
-    public $statusMessage = '';
-    public $status = '';
-
-    const BUILD_STATUS = 1;
-    const BUILD_FIELDS = 2;
 
     public function __construct(array $headers = [])
     {

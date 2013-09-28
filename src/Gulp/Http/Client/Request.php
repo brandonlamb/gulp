@@ -64,7 +64,7 @@ class Request
             ->setResource($response);
 
         $this->setOptions([
-            CURLOPT_CUSTOMREQUEST   => $method,
+            CURLOPT_CUSTOMREQUEST   => $this->method,
             CURLOPT_URL             => $url,
             CURLOPT_RETURNTRANSFER  => true,
             CURLOPT_AUTOREFERER     => true,
@@ -79,7 +79,7 @@ class Request
             CURLOPT_ENCODING        => '',
         ]);
 
-        if ($method === static::METHOD_GET || $method === static::METHOD_HEAD || $method === static::METHOD_DELETE) {
+        if ($this->method === static::METHOD_GET || $this->method === static::METHOD_HEAD || $this->method === static::METHOD_DELETE) {
             $this->setOptions([CURLOPT_HTTPGET => true, CURLOPT_POST => false]);
             $method !== static::METHOD_GET && $this->setOption(CURLOPT_NOBODY, true);
         } else {
@@ -246,6 +246,7 @@ class Request
      */
     public function addPostFile($key, $value)
     {
+        $this->header()->set('Content-Type', 'multipart/form-data');
         return $this->addPostFields([$key => curl_file_create(substr($value, 1), null, $key)]);
     }
 
@@ -372,7 +373,7 @@ class Request
 
         // If there are post or file uploads, add to post fields
         if (!empty($this->postFields) && is_array($this->postFields)) {
-            $this->handle()->setOption(CURLOPT_POSTFIELDS, $this->postFields);
+            $this->handle()->setPostFields($this->postFields);
         }
 
         // Excecute the curl call and assign the response to the response body

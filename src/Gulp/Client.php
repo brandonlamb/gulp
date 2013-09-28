@@ -226,9 +226,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function post($uri = null, array $headers = [], $postBody = null, array $options = [])
+    public function post($uri = null, array $headers = [], $body = null, array $options = [])
     {
-        return $this->createRequest('POST', $uri, $headers, $postBody, $options);
+        return $this->createRequest('POST', $uri, $headers, $body, $options);
     }
 
     /**

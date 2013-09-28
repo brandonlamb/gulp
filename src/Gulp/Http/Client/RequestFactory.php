@@ -39,6 +39,7 @@ class RequestFactory
 
                 // Add POST fields and files to an entity enclosing request if an array is used
                 if (is_array($body)) {
+/*
                     // Normalize PHP style cURL uploads with a leading '@' symbol
                     foreach ($body as $key => $value) {
                         if (is_string($value) && substr($value, 0, 1) == '@') {
@@ -48,6 +49,7 @@ class RequestFactory
                     }
                     // Add the fields if they are still present and not all files
                     $request->addPostFields($body);
+  */
                 } else {
                     // Add a raw entity body body to the request
                     $request->setBody($body, (string) $request->header()->get('Content-Type'));
@@ -58,9 +60,7 @@ class RequestFactory
             }
         }
 
-        if ($options) {
-            $this->applyOptions($request, $options);
-        }
+        $options && $this->applyOptions($request, $options);
 
         return $request;
     }
