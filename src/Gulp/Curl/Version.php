@@ -2,7 +2,7 @@
 
 namespace Gulp\Curl;
 
-use Gulp\Traits\Creational\SingletonTrait;
+use Gulp\Traits\SingletonTrait;
 
 /**
  * Class used for querying curl_version data

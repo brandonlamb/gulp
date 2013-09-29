@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp\Traits\Creational;
+namespace Gulp\Traits;
 
 trait SingletonTrait
 {
@@ -15,11 +15,7 @@ trait SingletonTrait
      */
     public static function getInstance()
     {
-        if (!static::$instance) {
-            static::$instance = (new \ReflectionClass(get_called_class()))
-                ->newInstanceWithoutConstructor();
-        }
-
+        !static::$instance && static::$instance = (new \ReflectionClass(get_called_class()))->newInstanceWithoutConstructor();
         return static::$instance;
     }
 

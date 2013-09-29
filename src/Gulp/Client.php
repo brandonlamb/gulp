@@ -2,11 +2,10 @@
 
 namespace Gulp;
 
-use Gulp\Common\Collection,
-	Gulp\Http\Uri,
-    Gulp\Http\Client\RequestFactory,
-	Gulp\Http\Client\Request,
-	Gulp\Http\Client\Header,
+use Gulp\Http\Uri,
+    Gulp\Http\RequestFactory,
+	Gulp\Http\Request,
+	Gulp\Http\Header,
 	Gulp\Curl\Version as CurlVersion;
 
 class Client
@@ -162,9 +161,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-	public function get($uri = null, array $headers = [], array $options = [])
+	public function get($uri = null, $headers = [], array $options = [])
     {
-        return $this->createRequest('GET', $uri, $headers, null, $options);
+        return $this->createRequest('GET', $uri, (array) $headers, null, $options);
     }
 
     /**
@@ -174,9 +173,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function head($uri = null, array $headers = [], array $options = [])
+    public function head($uri = null, $headers = [], array $options = [])
     {
-        return $this->createRequest('HEAD', $uri, $headers, null, $options);
+        return $this->createRequest('HEAD', $uri, (array) $headers, null, $options);
     }
 
     /**
@@ -187,9 +186,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function delete($uri = null, array $headers = [], $body = null, array $options = [])
+    public function delete($uri = null, $headers = [], $body = null, array $options = [])
     {
-        return $this->createRequest('DELETE', $uri, $headers, $body, $options);
+        return $this->createRequest('DELETE', $uri, (array) $headers, $body, $options);
     }
 
     /**
@@ -200,9 +199,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function put($uri = null, array $headers = [], $body = null, array $options = [])
+    public function put($uri = null, $headers = [], $body = null, array $options = [])
     {
-        return $this->createRequest('PUT', $uri, $headers, $body, $options);
+        return $this->createRequest('PUT', $uri, (array) $headers, $body, $options);
     }
 
     /**
@@ -213,9 +212,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function patch($uri = null, array $headers = [], $body = null, array $options = [])
+    public function patch($uri = null, $headers = [], $body = null, array $options = [])
     {
-        return $this->createRequest('PATCH', $uri, $headers, $body, $options);
+        return $this->createRequest('PATCH', $uri, (array) $headers, $body, $options);
     }
 
     /**
@@ -226,9 +225,9 @@ class Client
      * @param array $options
      * @return \Gulp\Request
      */
-    public function post($uri = null, array $headers = [], $body = null, array $options = [])
+    public function post($uri = null, $headers = [], $body = null, array $options = [])
     {
-        return $this->createRequest('POST', $uri, $headers, $body, $options);
+        return $this->createRequest('POST', $uri, (array) $headers, $body, $options);
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp\Traits\Structural\Collection;
+namespace Gulp\Traits;
 
 /**
  * The Registry Pattern
@@ -25,6 +25,29 @@ namespace Gulp\Traits\Structural\Collection;
  */
 trait RegistryTrait
 {
+    /** @var array */
+    protected $data = [];
+
+    /**
+     * Get the array to operate on from the implementation
+     * @return array
+     */
+    protected function & getData()
+    {
+        return $this->data;
+    }
+
+    /**
+     * Set the array to operate on from the implementation
+     * @param array $data
+     * @return self
+     */
+    protected function setData(array $data)
+    {
+        $this->data = $data;
+        return $this;
+    }
+
     /**
      * Get an object/value out of the Registry
      * @param string $key The key of the object/value to retrieve
@@ -98,5 +121,14 @@ trait RegistryTrait
     public function isEmpty()
     {
         return (0 === count($this->getData()));
+    }
+
+    /**
+     * Returns the number of data items
+     * @return int
+     */
+    public function count()
+    {
+        return count($this->getData());
     }
 }

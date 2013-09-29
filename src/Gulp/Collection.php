@@ -1,15 +1,13 @@
 <?php
 
-namespace Gulp\Common;
+namespace Gulp;
 
-use Gulp\Traits\Structural\Collection\HasDataTrait,
-    Gulp\Traits\Structural\Collection\RegistryTrait,
-    Gulp\Traits\Structural\Collection\CountableTrait,
-    Gulp\Traits\Structural\Collection\AssociativeArrayAccessTrait;
+use Gulp\Traits\RegistryTrait,
+    Gulp\Traits\AssociativeArrayAccessTrait;
 
 class Collection implements \Countable, \ArrayAccess
 {
-    use HasDataTrait, RegistryTrait, CountableTrait, AssociativeArrayAccessTrait;
+    use RegistryTrait, AssociativeArrayAccessTrait;
 
     /**
      * @param array $data
@@ -27,9 +25,7 @@ class Collection implements \Countable, \ArrayAccess
     public function & getBag($bag)
     {
         $data =& $this->getData();
-        if (!isset($data[$bag])) {
-            $data[$bag] = [];
-        }
+        !isset($data[$bag]) && $data[$bag] = [];
         return $data[$bag];
     }
 

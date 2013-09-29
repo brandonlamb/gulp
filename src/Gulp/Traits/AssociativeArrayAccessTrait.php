@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp\Traits\Structural\Collection;
+namespace Gulp\Traits;
 
 trait AssociativeArrayAccessTrait
 {

@@ -1,25 +1,33 @@
 <?php
 
-namespace Gulp\Http\Client;
+namespace Gulp\Http;
 
 class RequestFactory
 {
 	/** @var string Class to instantiate for requests */
-	protected $requestClass = '\\Gulp\\Http\\Client\\Request';
+	protected $requestClass = '\\Gulp\\Http\\Request';
 
     /** @var string Class to instantiate for responses */
-    protected $responseClass = '\\Gulp\\Http\\Client\\Response';
+    protected $responseClass = '\\Gulp\\Http\\Response';
 
 	/** @var string Class to instantiate for headers */
-	protected $headerClass = '\\Gulp\\Http\\Client\\Header';
+	protected $headerClass = '\\Gulp\\Http\\Header';
 
     /** @var string Class to instantiate for curl wrapper */
-    protected $handleClass = '\\Gulp\\Curl\\Wrapper';
+    protected $curlClass = '\\Gulp\\Curl';
 
-    public function create($method, $url, $headers = null, $body = null, array $options = [])
+    /**
+     * Factory method to create request objects
+     * @param string $method
+     * @param string $url
+     * @param array $headers
+     * @param array|string $body
+     * @param array $options
+     */
+    public function create($method, $url, array $headers = null, $body = null, array $options = [])
     {
         $method = strtoupper($method);
-        $handle = new $this->handleClass();
+        $handle = new $this->curlClass();
         $headers = new $this->headerClass(is_array($headers) ? $headers : [$headers]);
         $response = new $this->responseClass(new $this->headerClass());
         $request = new $this->requestClass($method, $url, $handle, $headers, $response);
@@ -35,21 +43,18 @@ class RequestFactory
         } else {
             if ($body) {
 				$request->header()->set('Content-Type', 'application/x-www-form-urlencoded');
-				$request->addPostFields($body);
 
                 // Add POST fields and files to an entity enclosing request if an array is used
                 if (is_array($body)) {
-/*
                     // Normalize PHP style cURL uploads with a leading '@' symbol
                     foreach ($body as $key => $value) {
-                        if (is_string($value) && substr($value, 0, 1) == '@') {
+                        if (is_string($value) && is_string($value) && $value{0} == '@') {
                             $request->addPostFile($key, $value);
                             unset($body[$key]);
                         }
                     }
                     // Add the fields if they are still present and not all files
                     $request->addPostFields($body);
-  */
                 } else {
                     // Add a raw entity body body to the request
                     $request->setBody($body, (string) $request->header()->get('Content-Type'));

@@ -1,15 +1,13 @@
 <?php
 
-namespace Gulp\Http\Client;
+namespace Gulp\Http;
 
-use Gulp\Traits\Structural\Collection\HasDataTrait,
-    Gulp\Traits\Structural\Collection\RegistryTrait,
-    Gulp\Traits\Structural\Collection\CountableTrait,
-    Gulp\Traits\Structural\Collection\AssociativeArrayAccessTrait;
+use Gulp\Traits\RegistryTrait,
+    Gulp\Traits\AssociativeArrayAccessTrait;
 
 class Header implements \Countable, \ArrayAccess
 {
-    use HasDataTrait, RegistryTrait, CountableTrait, AssociativeArrayAccessTrait;
+    use RegistryTrait, AssociativeArrayAccessTrait;
 
     const BUILD_STATUS = 1;
     const BUILD_FIELDS = 2;
@@ -104,13 +102,8 @@ class Header implements \Countable, \ArrayAccess
         }
 
         foreach ($content as $field) {
-            if (!is_array($field)) {
-                $field = array_map('trim', explode(':', $field));
-            }
-
-            if (count($field) == 2) {
-                $this->set($field[0], $field[1]);
-            }
+            !is_array($field) && $field = array_map('trim', explode(':', $field));
+            count($field) == 2 && $this->set($field[0], $field[1]);
         }
 
         return true;
@@ -120,9 +113,7 @@ class Header implements \Countable, \ArrayAccess
     {
         $lines = [];
         if (($flags & self::BUILD_STATUS) && !empty(self::$messages[$this->statusCode])) {
-            $lines[] = 'HTTP/' . $this->version . ' ' .
-                $this->statusCode . ' ' .
-                self::$messages[$this->statusCode];
+            $lines[] = 'HTTP/' . $this->version . ' ' . $this->statusCode . ' ' . self::$messages[$this->statusCode];
         }
 
         foreach ($this->data as $field => $value) {

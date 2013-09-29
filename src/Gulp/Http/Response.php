@@ -1,6 +1,6 @@
 <?php
 
-namespace Gulp\Http\Client;
+namespace Gulp\Http;
 
 class Response
 {
@@ -14,7 +14,7 @@ class Response
     protected $headerSize = 0;
 
     /**
-     * @param \Gulp\Http\Client\Header $header
+     * @param \Gulp\Http\Header $header
      */
     public function __construct(Header $header)
     {
@@ -34,7 +34,7 @@ class Response
 
     /**
      * Get the header
-     * @return \Gulp\Http\Client\Header
+     * @return \Gulp\Http\Header
      */
     public function getHeader()
     {

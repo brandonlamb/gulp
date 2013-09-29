@@ -1,10 +1,8 @@
 <?php
 
-namespace Gulp\Curl;
+namespace Gulp;
 
-use Gulp\Exception;
-
-class Wrapper
+class Curl
 {
     /** @var array */
     protected $http200Aliases = [];
@@ -1312,7 +1310,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setKRB4Level($value)
+    public function setKrb4Level($value)
     {
         return $this->setOption(CURLOPT_KRB4LEVEL, $value);
     }
@@ -1401,7 +1399,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLCipherList($value)
+    public function setSslCipherList($value)
     {
         return $this->setOption(CURLOPT_SSL_CIPHER_LIST, $value);
     }
@@ -1412,7 +1410,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLCert($value)
+    public function setSslCert($value)
     {
         return $this->setOption(CURLOPT_SSLCERT, $value);
     }
@@ -1423,7 +1421,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLCertPasswd($value)
+    public function setSslCertPasswd($value)
     {
         return $this->setOption(CURLOPT_SSLCERTPASSWD, $value);
     }
@@ -1436,7 +1434,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLCertType($value)
+    public function setSslCertType($value)
     {
         return $this->setOption(CURLOPT_SSLCERTTYPE, $value);
     }
@@ -1448,7 +1446,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLEngine($value)
+    public function setSslEngine($value)
     {
         return $this->setOption(CURLOPT_SSLENGINE, $value);
     }
@@ -1460,7 +1458,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLEngineDefailt($value)
+    public function setSslEngineDefailt($value)
     {
         return $this->setOption(CURLOPT_SSLENGINE_DEFAULT, $value);
     }
@@ -1471,7 +1469,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLKey($value)
+    public function setSslKey($value)
     {
         return $this->setOption(CURLOPT_SSLKEY, $value);
     }
@@ -1486,7 +1484,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLKeyPasswd($value)
+    public function setSslKeyPasswd($value)
     {
         return $this->setOption(CURLOPT_SSLKEYPASSWD, $value);
     }
@@ -1498,7 +1496,7 @@ print_r($options);
      * @param string $value
      * @return self
      */
-    public function setSSLKeyType($value)
+    public function setSslKeyType($value)
     {
         return $this->setOption(CURLOPT_SSLKEYTYPE, $value);
     }

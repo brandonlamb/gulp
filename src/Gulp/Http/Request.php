@@ -1,10 +1,9 @@
 <?php
 
-namespace Gulp\Http\Client;
+namespace Gulp\Http;
 
-use Gulp\Curl\Wrapper,
+use Gulp\Curl,
     Gulp\Client,
-    Gulp\Http\Uri,
     Gulp\Exception;
 
 class Request
@@ -29,7 +28,7 @@ class Request
     /** @var \Gulp\Http\Client\Header */
     protected $header;
 
-    /** @var \Gulp\Curl\Wrapper */
+    /** @var \Gulp\Curl */
     protected $handle;
 
     /** @var \Gulp\Http\Client\Response */
@@ -48,13 +47,13 @@ class Request
      * Constructor
      * @param string $method
      * @param string $url
-     * @param \Gulp\Curl\Wrapper $handle
+     * @param \Gulp\Curl $handle
      * @param \Gulp\Http\Client\Header $header
      * @param \Gulp\Http\Client\Response $response
      * @param array $options
      * @todo The default options should probably get pushed out of here and up the stack
      */
-    public function __construct($method, $url, Wrapper $handle, Header $header, Response $response)
+    public function __construct($method, $url, Curl $handle, Header $header, Response $response)
     {
         $this->method = strtoupper($method);
 
@@ -107,12 +106,12 @@ class Request
 
     /**
      * Resource injection
-     * @param Wrapper|Header|Response $resource
+     * @param Curl|Header|Response $resource
      * @return self
      */
     public function setResource($resource)
     {
-        if ($resource instanceof Wrapper) {
+        if ($resource instanceof Curl) {
             $this->handle = $resource;
         } elseif ($resource instanceof Header) {
             $this->header = $resource;
@@ -147,7 +146,7 @@ class Request
 
     /**
      * Get the curl handle
-     * @return \Gulp\Curl\Wrapper
+     * @return \Gulp\Curl
      */
     public function handle()
     {
@@ -228,10 +227,6 @@ class Request
     public function addPostFields($params)
     {
         foreach ($params as $key => $value) {
-            if (is_string($key) && is_string($value) && $value{0} === '@') {
-                $this->addPostFile($key, $value);
-                continue;
-            }
             $this->postFields[$key] = $value;
         }
 
@@ -246,7 +241,7 @@ class Request
      */
     public function addPostFile($key, $value)
     {
-        $this->header()->set('Content-Type', 'multipart/form-data');
+        $this->header()->set('Content-Type', 'multipart/form-data; charset=UTF8');
         return $this->addPostFields([$key => curl_file_create(substr($value, 1), null, $key)]);
     }
 
@@ -366,15 +361,13 @@ class Request
     {
         $headers = count($this->header()) > 0 ? $this->header()->build() : [];
         $headers[] = 'Expect:';
-        $this->setOption(CURLOPT_HTTPHEADER, $headers);
+        $this->handle()->setHttpHeader($headers);
 
         // Set the options all at once
         $this->handle()->setOptions($this->options);
 
         // If there are post or file uploads, add to post fields
-        if (!empty($this->postFields) && is_array($this->postFields)) {
-            $this->handle()->setPostFields($this->postFields);
-        }
+        !empty($this->postFields) && is_array($this->postFields) && $this->handle()->setPostFields($this->postFields);
 
         // Excecute the curl call and assign the response to the response body
         $body = $this->handle()->execute();
@@ -385,7 +378,7 @@ class Request
         }
 
         // Get the header size so we know where the body begins in the response
-        $headerSize = $this->handle()->getInfo(CURLINFO_HEADER_SIZE);
+        $headerSize = $this->handle()->getHeaderSize();
 
         // Parse out headers from the body
         $this->response()

@@ -2,7 +2,7 @@
 
 namespace Gulp\Http;
 
-use Gulp\Traits\Creational\SingletonTrait;
+use Gulp\Traits\SingletonTrait;
 
 /**
  * Provides mappings of file extensions to mimetypes
@@ -11,9 +11,6 @@ use Gulp\Traits\Creational\SingletonTrait;
 class Mimetypes
 {
     use SingletonTrait;
-
-    /** @var self */
-    protected static $instance;
 
     /** @var array Mapping of extension to mimetype */
     protected $mimetypes = array(
