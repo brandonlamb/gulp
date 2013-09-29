@@ -56,3 +56,4 @@ REQUIREMENTS
 * Support file uploads
 * Assume JSON responses
 * Assume simple API workflow
+* No external dependencies (started as primary goal)
