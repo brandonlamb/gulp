@@ -13,8 +13,14 @@ class Header implements \Countable, \ArrayAccess
     const BUILD_FIELDS = 2;
 
     public $version = '1.0';
+
+    /** @var int */
     public $statusCode = 0;
+
+    /** @var string */
     public $statusMessage = '';
+
+    /** @var string */
     public $status = '';
 
     protected static $messages = [

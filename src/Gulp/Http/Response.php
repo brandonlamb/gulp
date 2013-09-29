@@ -28,7 +28,7 @@ class Response
      */
     public function setHeaders($headers)
     {
-        $this->getHeader()->parse($headers);
+        $this->header()->parse($headers);
         return $this;
     }
 
@@ -36,7 +36,7 @@ class Response
      * Get the header
      * @return \Gulp\Http\Header
      */
-    public function getHeader()
+    public function header()
     {
         return $this->header;
     }
