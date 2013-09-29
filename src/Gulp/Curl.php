@@ -337,7 +337,6 @@ class Curl
      */
     public function setOptions(array $options)
     {
-print_r($options);
         curl_setopt_array($this->handle, $options);
         return $this;
     }
