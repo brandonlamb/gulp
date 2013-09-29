@@ -56,18 +56,18 @@ class Response
      * Get the response body
      * @return string
      */
-    public function getBody()
+    public function & getBody()
     {
         return (string) $this->body;
     }
 
     /**
      * Return the json_decode parsed response body
+     * @param bool $toArray, parse the response as an array. False returns objects
      * @return mixed
      */
-    public function json()
+    public function json($toArray = true)
     {
-        null === $this->json && $this->json = json_decode();
-        return $this->json;
+        return json_decode($this->body, (bool) $toArray);
     }
 }
