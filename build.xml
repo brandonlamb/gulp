@@ -143,7 +143,7 @@
 
 	<target name="phpunit" description="Run unit tests with PHPUnit">
 		<copy todir="${basedir}/build/php.d">
-			<fileset dir="/opt/sbux/etc/php5/conf.d"/>
+			<fileset dir="/sbux/users/rwad/etc/php5/conf.d"/>
 		</copy>
 
 		<move file="${basedir}/build/php.d/xdebug.ini.disabled" tofile="${basedir}/build/php.d/xdebug.ini"/>
@@ -151,9 +151,9 @@
 		<!-- xml formatting intentional, don’t want whitespace at start of line -->
 		<echo file="${basedir}/build/php.d/coverage.ini">memory_limit = 1536M</echo>
 
-		<exec executable="/opt/sbux/usr/bin/php" failonerror="true">
+		<exec executable="php" failonerror="true">
             <env key="PHP_INI_SCAN_DIR" path="${basedir}/build/php.d"/>
-			<arg line="-d xdebug.profiler_enable=on /opt/sbux/usr/bin/phpunit --configuration ${basedir}/phpunit-ci.xml" />
+			<arg line="-d xdebug.profiler_enable=on phpunit --configuration ${basedir}/phpunit-ci.xml" />
 		</exec>
 	</target>
 
