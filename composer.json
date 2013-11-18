@@ -1,0 +1,23 @@
+{
+	"name": "brandonlamb/gulp",
+	"version": "0.1.0",
+	"type": "library",
+	"description": "REST API Library for PHP 5.5+",
+	"keywords": ["rest", "api", "curl"],
+	"homepage": "https://github.com/brandonlamb/Gulp",
+	"license" : "BSD",
+	"authors" : [
+		{
+			"name": "Brandon Lamb",
+			"email": "brandon@brandonlamb.com"
+		}
+	],
+	"autoload": {
+		"psr-0": {
+			"Gulp": "src/"
+		}
+	},
+	"require": {
+		"php": ">=5.5.0"
+	}
+}

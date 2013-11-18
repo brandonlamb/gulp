@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<phpunit backupGlobals="false"
+	backupStaticAttributes="false"
+	bootstrap="./tests/bootstrap.php"
+	codecoverage="false"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+	printsummary="true"
+	processIsolation="false"
+	stopOnFailure="false"
+	strict="true"
+	syntaxCheck="false"
+	timeoutForSmallTests="5"
+	verbose="true">
+
+	<testsuites>
+		<testsuite name="Gulp Test Suite">
+			<directory suffix="Test.php">./tests/unit</directory>
+			<!--<directory suffix="Test.php">tests/system</directory>-->
+		</testsuite>
+	</testsuites>
+
+	<filter>
+		<whitelist addUncoveredFilesFromWhitelist="true">
+			<directory suffix=".php">./src</directory>
+			<exclude>
+				<group>exceptions</group>
+				<file>src/autoload.php</file>
+			</exclude>
+		</whitelist>
+	</filter>
+</phpunit>
