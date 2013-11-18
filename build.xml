@@ -151,9 +151,9 @@
 		<!-- xml formatting intentional, don’t want whitespace at start of line -->
 		<echo file="${basedir}/build/php.d/coverage.ini">memory_limit = 1536M</echo>
 
-		<exec executable="php" failonerror="true">
+		<exec executable="/sbux/users/rwad/usr/bin/php" failonerror="true">
             <env key="PHP_INI_SCAN_DIR" path="${basedir}/build/php.d"/>
-			<arg line="-d xdebug.profiler_enable=on phpunit --configuration ${basedir}/phpunit-ci.xml" />
+			<arg line="-d xdebug.profiler_enable=on /sbux/users/rwad/usr/bin/phpunit --configuration ${basedir}/phpunit-ci.xml" />
 		</exec>
 	</target>
 
