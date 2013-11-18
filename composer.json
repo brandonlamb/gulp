@@ -19,5 +19,10 @@
 	},
 	"require": {
 		"php": ">=5.5.0"
-	}
+	},
+    "repositories": [
+        {
+            "packagist": false
+        }
+    ]
 }
